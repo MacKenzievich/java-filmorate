@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -11,20 +11,20 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
-
+@Service
+@Slf4j
 public class FilmService {
     private final static int MAX_LENGTH_DESCRIPTION = 200;
     private final static LocalDate OLDEST_FILM = LocalDate.of(1895, 12, 28);
     private final static Map<Long, Film> films = new HashMap<>();
-    private final static Logger log = (Logger) LoggerFactory.getLogger(FilmService.class);
+
 
     public Collection<Film> getFilms() {
         return films.values();
     }
 
-    public Film addFilm(Film film) {
+    public Film create(Film film) {
         validate(film);
         film.setId(getNextId());
         films.put(film.getId(), film);
@@ -32,7 +32,7 @@ public class FilmService {
         return film;
     }
 
-    public Film updateFilm(Film newFilm) {
+    public Film update(Film newFilm) {
         if (newFilm.getId() == null) {
             log.warn("Попытка обновить фильм с пустым полем ID: {}", newFilm);
             throw new ConditionsNotMetException("Id должен быть указан");

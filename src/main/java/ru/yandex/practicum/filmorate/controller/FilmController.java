@@ -24,12 +24,12 @@ public class FilmController {
 
     @PostMapping
     public Film create(@RequestBody Film film) {
-        return service.addFilm(film);
+        return service.create(film);
     }
 
     @PutMapping
     public Film update(@RequestBody Film newFilm) {
-        return service.updateFilm(newFilm);
+        return service.update(newFilm);
     }
 
 
