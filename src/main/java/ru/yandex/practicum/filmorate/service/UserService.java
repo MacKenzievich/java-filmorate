@@ -16,7 +16,7 @@ import java.util.Map;
 @Slf4j
 @Service
 public class UserService {
-    private final static Map<Long, User> users = new HashMap<>();
+    private static final Map<Long, User> users = new HashMap<>();
 
     public Collection<User> getUsers() {
         return users.values();
