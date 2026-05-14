@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import java.util.Collection;
 
 
-
 @RestController
 @RequestMapping("/films")
 public class FilmController {
@@ -31,7 +30,6 @@ public class FilmController {
     public Film update(@RequestBody Film newFilm) {
         return service.update(newFilm);
     }
-
 
 
 }

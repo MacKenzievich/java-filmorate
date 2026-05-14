@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 
@@ -18,7 +17,6 @@ import java.util.Map;
 @Service
 public class UserService {
     private final static Map<Long, User> users = new HashMap<>();
-
 
     public Collection<User> getUsers() {
         return users.values();
