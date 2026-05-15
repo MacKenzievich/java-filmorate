@@ -45,11 +45,8 @@ public class UserService {
     }
 
     private void validate(User user) {
-        if (!user.getEmail().isEmpty() && !user.getEmail().contains("@")) {
-            log.warn("Попытка добавить user с некорректным email: {}", user);
-            throw new ValidationException("некорректный email;");
-        }
-        if ((user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" "))) {
+
+        if (user.getLogin().contains(" ")) {
             log.warn("Попытка добавить user с некорректным login: {}", user);
             throw new ValidationException("некорректный login;");
         }

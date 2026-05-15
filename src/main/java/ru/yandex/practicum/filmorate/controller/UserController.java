@@ -1,20 +1,22 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
 
+@Validated
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    UserService service;
-
-    public UserController(UserService service) {
-        this.service = service;
-    }
+    private final UserService service;
 
     @GetMapping
     public Collection<User> findAll() {
@@ -22,13 +24,12 @@ public class UserController {
     }
 
     @PostMapping
-    public User create(@Valid @RequestBody User user) {
-        return service.create(user);
+    public ResponseEntity<User> create(@Valid @RequestBody User user) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(user));
     }
 
     @PutMapping
-    public User update(@Valid @RequestBody User newUser) {
-        return service.update(newUser);
+    public ResponseEntity<User> update(@Valid @RequestBody User newUser) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.update(newUser));
     }
-
 }

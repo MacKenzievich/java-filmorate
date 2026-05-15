@@ -1,20 +1,23 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
 
-
+@Validated
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-    FilmService service;
+    private final FilmService service;
 
-    public FilmController(FilmService service) {
-        this.service = service;
-    }
 
     @GetMapping
     public Collection<Film> findAll() {
@@ -22,14 +25,12 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film create(@RequestBody Film film) {
-        return service.create(film);
+    public ResponseEntity<Film> create(@Valid @RequestBody Film film) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(film));
     }
 
     @PutMapping
-    public Film update(@RequestBody Film newFilm) {
-        return service.update(newFilm);
+    public ResponseEntity<Film> update(@Valid @RequestBody Film newFilm) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.update(newFilm));
     }
-
-
 }

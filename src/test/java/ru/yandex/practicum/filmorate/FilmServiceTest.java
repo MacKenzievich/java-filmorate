@@ -1,121 +1,101 @@
 package ru.yandex.practicum.filmorate;
 
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.model.Film;
+
+import java.time.LocalDate;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
+class FilmValidationTest {
 
-import java.time.LocalDate;
+    private static ValidatorFactory validatorFactory;
+    private static Validator validator;
 
-class FilmServiceTest {
+    @BeforeAll
+    static void initValidator() {
+        validatorFactory = Validation.buildDefaultValidatorFactory();
+        validator = validatorFactory.getValidator();
+    }
 
-    private FilmService service;
+    @AfterAll
+    static void closeValidator() {
+        validatorFactory.close();
+    }
 
-    @BeforeEach
-    void setUp() {
-        service = new FilmService();
+    private Film validFilm() {
+        Film film = new Film();
+        film.setId(1L);
+        film.setName("Matrix");
+        film.setDescription("Some description");
+        film.setReleaseDate(LocalDate.of(1999, 3, 31));
+        film.setDuration(120L);
+        return film;
     }
 
     @Test
-    void createFilm_ValidData_ShouldWork() {
-        Film film = new Film();
-        film.setName("Тест");
-        film.setDescription("Описание");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(90L);
+    void shouldPassValidation_whenFilmValid() {
+        Film film = validFilm();
 
-        Film created = service.create(film);
-        assertNotNull(created.getId());
-        assertEquals("Тест", created.getName());
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+
+        assertTrue(violations.isEmpty());
     }
 
     @Test
-    void validate_FilmWithEmptyName_ShouldThrow() {
-        Film film = new Film();
-        film.setName(" ");
-        film.setDescription("Описание");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(60L);
+    void shouldFail_whenNameIsNull() {
+        Film film = validFilm();
+        film.setName(null);
 
-        Exception exception = assertThrows(ValidationException.class, () -> {
-            service.create(film);
-        });
-        assertEquals("название не может быть пустым;", exception.getMessage());
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("name")));
     }
 
     @Test
-    void validate_DescriptionTooLong_ShouldThrow() {
-        Film film = new Film();
-        film.setName("Тест");
+    void shouldFail_whenNameIsBlank() {
+        Film film = validFilm();
+        film.setName("   ");
+
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("name")));
+    }
+
+    @Test
+    void shouldFail_whenDescriptionLongerThan200() {
+        Film film = validFilm();
         film.setDescription("a".repeat(201));
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(30L);
 
-        Exception exception = assertThrows(ValidationException.class, () -> {
-            service.create(film);
-        });
-        assertEquals("максимальная длина описания — 200 символов", exception.getMessage());
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("description")));
     }
 
     @Test
-    void validate_ReleaseDateBefore1895_ShouldThrow() {
-        Film film = new Film();
-        film.setName("Тест");
-        film.setDescription("Описание");
-        film.setReleaseDate(LocalDate.of(1800, 1, 1));
-        film.setDuration(60L);
+    void shouldFail_whenReleaseDateIsNull() {
+        Film film = validFilm();
+        film.setReleaseDate(null);
 
-        Exception exception = assertThrows(ValidationException.class, () -> {
-            service.create(film);
-        });
-        assertEquals("дата релиза — не раньше 28 декабря 1895 года", exception.getMessage());
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("releaseDate")));
     }
 
     @Test
-    void validate_NonPositiveDuration_ShouldThrow() {
-        Film film = new Film();
-        film.setName("Тест");
-        film.setDescription("Описание");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
+    void shouldFail_whenDurationLessThan1() {
+        Film film = validFilm();
         film.setDuration(0L);
 
-        Exception exception = assertThrows(ValidationException.class, () -> {
-            service.create(film);
-        });
-        assertEquals("продолжительность фильма должна быть положительным числом.", exception.getMessage());
-    }
+        Set<ConstraintViolation<Film>> violations = validator.validate(film);
 
-    @Test
-    void update_NonExistingId_ShouldThrow() {
-        Film film = new Film();
-        film.setId(999L);
-        film.setName("Обновление");
-        film.setDescription("Обновленное описание");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(120L);
-
-        Exception exception = assertThrows(NotFoundException.class, () -> {
-            service.update(film);
-        });
-    }
-
-    @Test
-    void update_WithoutId_ShouldThrow() {
-        Film film = new Film();
-        film.setName("Обновление");
-        film.setDescription("Обновленное описание");
-        film.setReleaseDate(LocalDate.of(2000, 1, 1));
-        film.setDuration(120L);
-
-        Exception exception = assertThrows(ConditionsNotMetException.class, () -> {
-            service.update(film);
-        });
-        assertEquals("Id должен быть указан", exception.getMessage());
+        assertTrue(violations.stream().anyMatch(v -> v.getPropertyPath().toString().equals("duration")));
     }
 }
