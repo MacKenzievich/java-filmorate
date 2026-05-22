@@ -35,7 +35,6 @@ public class UserService {
             log.warn("Попытка обновить user с пустым полем ID: {}", newUser);
             throw new ConditionsNotMetException("Id должен быть указан");
         }
-        validate(newUser);
         if (!users.containsKey(newUser.getId())) {
             log.warn("Попытка обновить user с несуществуещим ID");
             throw new NotFoundException("User с таким ID не найден");

@@ -40,7 +40,6 @@ public class FilmService {
             log.warn("Попытка обновить фильм с несущестсвуещим ID");
             throw new NotFoundException("Фильм с таким ID не найден");
         }
-        validate(newFilm);  //Почему нам это не нужно? если при обновлении мы можем это поле сделать невалидное
         films.put(newFilm.getId(), newFilm);
         return newFilm;
     }
