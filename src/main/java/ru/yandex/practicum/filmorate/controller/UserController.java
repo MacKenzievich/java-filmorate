@@ -32,4 +32,10 @@ public class UserController {
     public ResponseEntity<User> update(@Valid @RequestBody User newUser) {
         return ResponseEntity.status(HttpStatus.OK).body(service.update(newUser));
     }
+
+    @PutMapping("/users/{id}/friends/{friendId}")
+    public ResponseEntity<?> addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        service.addToFriend(id, friendId);
+        return ResponseEntity.ok().build();
+    }
 }
