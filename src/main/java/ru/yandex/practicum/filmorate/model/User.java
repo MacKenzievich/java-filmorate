@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -30,10 +29,6 @@ public class User {
     }
 
     public void deleteFriendsId(Long id) {
-        if (!friendsId.contains(id)) {
-            log.warn("User-a с таким id = " + id + " нет в друзьях при удалении из друзей");
-            throw new NotFoundException("User-a с таким id = " + id + " нет в друзьях");
-        }
         friendsId.remove(id);
     }
 }

@@ -70,11 +70,12 @@ public class UserService {
         }
     }
 
-    public void addToFriend(Long id, Long friendsId) {
+    public User addToFriend(Long id, Long friendsId) {
         User firstUser = getUser(id);
         User secondUser = getUser(friendsId);
         firstUser.addFriendsId(friendsId);
         secondUser.addFriendsId(id);
+        return firstUser;
     }
 
     public void deleteFromFriends(Long id, Long friendsId) {
