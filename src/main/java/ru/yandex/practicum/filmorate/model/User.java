@@ -4,13 +4,14 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+@Slf4j
 @Data
 public class User {
     private Long id;
@@ -22,20 +23,17 @@ public class User {
     private String name;
     @NotNull
     private LocalDate birthday;
-    private Set<Long> friends = new HashSet<>();
+    private Set<Long> friendsId = new HashSet<>();
 
-    public void addToFriends(Long id) {
-        friends.add(id);
+    public void addFriendsId(Long id) {
+        friendsId.add(id);
     }
 
-    public void deleteFromFriends(Long id) {
-        if (!friends.contains(id)) {
-            throw new NotFoundException("User-a с таким id нет в друзьях");
+    public void deleteFriendsId(Long id) {
+        if (!friendsId.contains(id)) {
+            log.warn("User-a с таким id = " + id + " нет в друзьях при удалении из друзей");
+            throw new NotFoundException("User-a с таким id = " + id + " нет в друзьях");
         }
-        friends.remove(id);
-    }
-
-    public Collection<Long> getFriends() {
-        return friends;
+        friendsId.remove(id);
     }
 }

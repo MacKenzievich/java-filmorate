@@ -12,14 +12,27 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+
 @Slf4j
 @Service
 public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage){
+    public UserService(UserStorage userStorage) {
         this.userStorage = userStorage;
+    }
+
+    public User getUser(Long id) {
+        if (!userStorage.search(id)) {
+            log.warn("user c таким id = " + id + " не найден при получении юзера");
+            throw new NotFoundException("user c таким id = " + id + " не найден");
+        }
+        return userStorage.getUser(id);
     }
 
     public Collection<User> getUsers() {
@@ -38,7 +51,7 @@ public class UserService {
         }
         if (!userStorage.search(newUser.getId())) {
             log.warn("Попытка обновить user с несуществуещим ID");
-            throw new NotFoundException("User с таким ID не найден");
+            throw new NotFoundException("User с таким id = " + newUser.getId() + " не найден");
         }
         return userStorage.update(newUser);
     }
@@ -57,15 +70,36 @@ public class UserService {
         }
     }
 
-    public void addToFriend(Long id, Long friendsId){ // проверка под каждого
-        if(!userStorage.search(id) && !userStorage.search(friendsId)){
-            throw new NotFoundException("User c таким id не найден");
-        }
-        User firstUser = userStorage.getUser(id);
-        User secondUser = userStorage.getUser(friendsId);
-        firstUser.addToFriends(friendsId);
-        secondUser.addToFriends(id);
+    public void addToFriend(Long id, Long friendsId) {
+        User firstUser = getUser(id);
+        User secondUser = getUser(friendsId);
+        firstUser.addFriendsId(friendsId);
+        secondUser.addFriendsId(id);
+    }
+
+    public void deleteFromFriends(Long id, Long friendsId) {
+        User firstUser = getUser(id);
+        User secondUser = getUser(friendsId);
+        firstUser.deleteFriendsId(friendsId);
+        secondUser.deleteFriendsId(id);
+    }
+
+    public Collection<User> getFriends(Long id) {
+        return getUser(id).getFriendsId().stream()
+                .map(this::getUser)
+                .collect(Collectors.toList());
+    }
+
+    public Collection<User> getMutualFriends(Long id, Long otherId) {
+        Set<Long> firstUserFriendsId = getUser(id).getFriendsId();
+        Set<Long> secondUserFriendsId = getUser(otherId).getFriendsId();
+        Set<Long> mutualFriendsId = new HashSet<>(firstUserFriendsId);
+        mutualFriendsId.retainAll(secondUserFriendsId);
+        return mutualFriendsId.stream()
+                .map(this::getUser)
+                .collect(Collectors.toList());
     }
 }
+
 
 
