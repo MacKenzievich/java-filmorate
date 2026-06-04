@@ -76,7 +76,11 @@ public class FilmService {
     }
 
     public void deleteLike(Long id, Long userId) {
-        getFilm(id).deleteUserLike(userId);
+        boolean isFriend = getFilm(id).deleteUserLike(userId);
+        if (!isFriend) {
+            log.warn("User c id = " + userId + " не ставил лайк");
+            throw new NotFoundException("User c id = " + userId + " не ставил лайк");
+        }
     }
 
     public Collection<Film> getPopularFilms(Long count) {

@@ -32,11 +32,7 @@ public class Film {
         likedByUserIds.add(userId);
     }
 
-    public void deleteUserLike(Long userId) {
-        if (!likedByUserIds.contains(userId)) {
-            log.warn("User c id = " + userId + " не ставил лайк");
-            throw new NotFoundException("User c id = " + userId + " не ставил лайк");
-        }
-        likedByUserIds.remove(userId);
+    public boolean deleteUserLike(Long userId) {
+        return likedByUserIds.remove(userId);
     }
 }
