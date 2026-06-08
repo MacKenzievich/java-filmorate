@@ -50,4 +50,5 @@ public class InMemoryUserStorage implements UserStorage {
                 .map(this::getUser)
                 .collect(Collectors.toList());
     }
+
 }
