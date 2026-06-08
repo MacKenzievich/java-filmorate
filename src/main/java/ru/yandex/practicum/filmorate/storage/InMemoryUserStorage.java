@@ -1,19 +1,20 @@
 package ru.yandex.practicum.filmorate.storage;
 
+
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class InMemoryUserStorage implements UserStorage {
     private static final Map<Long, User> users = new HashMap<>();
+    private long currentId = 1;
 
     @Override
     public User add(User user) {
-        user.setId(getNextId());
+        user.setId(currentId++);
         users.put(user.getId(), user);
         return user;
     }
@@ -39,12 +40,15 @@ public class InMemoryUserStorage implements UserStorage {
         return users.get(id);
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @Override
+    public Collection<User> getMutualFriendsFromDB(Long id, Long otherId){
+        Set<Long> firstUserFriendsId = getUser(id).getFriendsId();
+        Set<Long> secondUserFriendsId = getUser(otherId).getFriendsId();
+        Set<Long> mutualFriendsId = new HashSet<>(firstUserFriendsId);
+        mutualFriendsId.retainAll(secondUserFriendsId);
+        return mutualFriendsId.stream()
+                .map(this::getUser)
+                .collect(Collectors.toList());
     }
+
 }

@@ -4,12 +4,15 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
     private static final Map<Long, Film> films = new HashMap<>();
+    private long currentId = 1;
 
     @Override
     public Film getFilm(Long id) {
@@ -18,7 +21,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film add(Film film) {
-        film.setId(getNextId());
+        film.setId(currentId++);
         films.put(film.getId(), film);
         return film;
     }
@@ -39,12 +42,13 @@ public class InMemoryFilmStorage implements FilmStorage {
         return films.values();
     }
 
-    private long getNextId() {
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @Override
+    public Collection<Film> getPopularFilmsFromDB(Long count){
+       return getFilms().stream()
+                .sorted(Comparator.comparingInt((Film f) -> f.getLikedByUserIds().size()).reversed())
+                .limit(count)
+                .collect(Collectors.toList());
     }
+
+
 }

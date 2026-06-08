@@ -13,8 +13,7 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.stream.Collectors;
+
 
 @Service
 @Slf4j
@@ -31,11 +30,12 @@ public class FilmService {
     }
 
     public Film getFilm(Long id) {
-        if (!filmStorage.search(id)) {
-            log.warn("Film c указанным id = " + id + " не найден при получении фильма");
-            throw new NotFoundException("Film c указанным id = " + id + " не найден");
+        Film film = filmStorage.getFilm(id);
+        if (film == null) {
+            log.warn("фильм с id = " + id + " не найден при получении");
+            throw new NotFoundException("фильм c таким id = " + id + " не найден");
         }
-        return filmStorage.getFilm(id);
+        return film;
     }
 
     public Collection<Film> getFilms() {
@@ -68,11 +68,11 @@ public class FilmService {
     }
 
     public void addLike(Long id, Long userId) {
-        if (!userStorage.search(userId)) {
+        if (!userStorage.search(userId)) { // здесь я проверяю user-a, что он есть, чтобы он поставил лайк
             log.warn("User c таким id " + id + " не найден при добавлении лайка");
             throw new NotFoundException("User c таким id " + id + " не найден");
         }
-        getFilm(id).addUserLike(userId);
+        getFilm(id).addUserLike(userId); // здесь я исправил, и если фильма нет, будет NotFound
     }
 
     public void deleteLike(Long id, Long userId) {
@@ -84,10 +84,7 @@ public class FilmService {
     }
 
     public Collection<Film> getPopularFilms(Long count) {
-        return getFilms().stream()
-                .sorted(Comparator.comparingInt((Film f) -> f.getLikedByUserIds().size()).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
+        return filmStorage.getPopularFilmsFromDB(count);
     }
 
 }
