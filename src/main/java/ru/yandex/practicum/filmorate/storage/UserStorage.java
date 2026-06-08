@@ -15,4 +15,6 @@ public interface UserStorage {
     Collection<User> getUsers();
 
     User getUser(Long id);
+
+    Collection<User> getMutualFriendsFromDB(Long id, Long otherId);
 }

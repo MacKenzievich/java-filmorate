@@ -12,8 +12,6 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -28,11 +26,12 @@ public class UserService {
     }
 
     public User getUser(Long id) {
-        if (!userStorage.search(id)) {
-            log.warn("user c таким id = " + id + " не найден при получении юзера");
+        User user = userStorage.getUser(id);
+        if (user == null) {
+            log.warn("пользователь с id = " + id + " не найден при получении");
             throw new NotFoundException("user c таким id = " + id + " не найден");
         }
-        return userStorage.getUser(id);
+        return user;
     }
 
     public Collection<User> getUsers() {
@@ -92,13 +91,7 @@ public class UserService {
     }
 
     public Collection<User> getMutualFriends(Long id, Long otherId) {
-        Set<Long> firstUserFriendsId = getUser(id).getFriendsId();
-        Set<Long> secondUserFriendsId = getUser(otherId).getFriendsId();
-        Set<Long> mutualFriendsId = new HashSet<>(firstUserFriendsId);
-        mutualFriendsId.retainAll(secondUserFriendsId);
-        return mutualFriendsId.stream()
-                .map(this::getUser)
-                .collect(Collectors.toList());
+       return userStorage.getMutualFriendsFromDB(id, otherId);
     }
 }
 
