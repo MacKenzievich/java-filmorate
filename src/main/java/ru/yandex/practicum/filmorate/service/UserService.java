@@ -91,7 +91,7 @@ public class UserService {
     }
 
     public Collection<User> getMutualFriends(Long id, Long otherId) {
-       return userStorage.getMutualFriendsFromDB(id, otherId);
+        return userStorage.getMutualFriendsFromDB(id, otherId);
     }
 }
 

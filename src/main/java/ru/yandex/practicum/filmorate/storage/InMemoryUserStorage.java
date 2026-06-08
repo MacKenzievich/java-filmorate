@@ -41,7 +41,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public Collection<User> getMutualFriendsFromDB(Long id, Long otherId){
+    public Collection<User> getMutualFriendsFromDB(Long id, Long otherId) {
         Set<Long> firstUserFriendsId = getUser(id).getFriendsId();
         Set<Long> secondUserFriendsId = getUser(otherId).getFriendsId();
         Set<Long> mutualFriendsId = new HashSet<>(firstUserFriendsId);
@@ -50,5 +50,4 @@ public class InMemoryUserStorage implements UserStorage {
                 .map(this::getUser)
                 .collect(Collectors.toList());
     }
-
 }
