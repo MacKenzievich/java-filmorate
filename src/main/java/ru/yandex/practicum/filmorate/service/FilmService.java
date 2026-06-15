@@ -1,34 +1,50 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
+
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+
 
 @Service
 @Slf4j
 public class FilmService {
     private static final LocalDate OLDEST_FILM = LocalDate.of(1895, 12, 28);
-    private static final Map<Long, Film> films = new HashMap<>();
 
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
+
+    @Autowired
+    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+        this.filmStorage = filmStorage;
+        this.userStorage = userStorage;
+    }
+
+    public Film getFilm(Long id) {
+        Film film = filmStorage.getFilm(id);
+        if (film == null) {
+            log.warn("фильм с id = " + id + " не найден при получении");
+            throw new NotFoundException("фильм c таким id = " + id + " не найден");
+        }
+        return film;
+    }
 
     public Collection<Film> getFilms() {
-        return films.values();
+        return filmStorage.getFilms();
     }
 
     public Film create(Film film) {
         validate(film);
-        film.setId(getNextId());
-        films.put(film.getId(), film);
-        log.info("Creating film {}", film);
-        return film;
+        return filmStorage.add(film);
     }
 
     public Film update(Film newFilm) {
@@ -36,12 +52,11 @@ public class FilmService {
             log.warn("Попытка обновить фильм с пустым полем ID: {}", newFilm);
             throw new ConditionsNotMetException("Id должен быть указан");
         }
-        if (!films.containsKey(newFilm.getId())) {
+        if (!filmStorage.search(newFilm.getId())) {
             log.warn("Попытка обновить фильм с несущестсвуещим ID");
-            throw new NotFoundException("Фильм с таким ID не найден");
+            throw new NotFoundException("Фильм с таким id = " + newFilm.getId() + " не найден");
         }
-        films.put(newFilm.getId(), newFilm);
-        return newFilm;
+        return filmStorage.update(newFilm);
     }
 
     private void validate(Film film) {
@@ -52,12 +67,24 @@ public class FilmService {
 
     }
 
-    private long getNextId() {
-        long currentMaxId = FilmService.films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    public void addLike(Long id, Long userId) {
+        if (!userStorage.search(userId)) { // здесь я проверяю user-a, что он есть, чтобы он поставил лайк
+            log.warn("User c таким id " + id + " не найден при добавлении лайка");
+            throw new NotFoundException("User c таким id " + id + " не найден");
+        }
+        getFilm(id).addUserLike(userId); // здесь я исправил, и если фильма нет, будет NotFound
     }
+
+    public void deleteLike(Long id, Long userId) {
+        boolean isFriend = getFilm(id).deleteUserLike(userId);
+        if (!isFriend) {
+            log.warn("User c id = " + userId + " не ставил лайк");
+            throw new NotFoundException("User c id = " + userId + " не ставил лайк");
+        }
+    }
+
+    public Collection<Film> getPopularFilms(Long count) {
+        return filmStorage.getPopularFilmsFromDB(count);
+    }
+
 }
