@@ -1,99 +1,73 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FriendStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.List;
 
-import java.time.LocalDate;
-import java.util.Collection;
-import java.util.stream.Collectors;
-
-
-@Slf4j
+@RequiredArgsConstructor
 @Service
 public class UserService {
     private final UserStorage userStorage;
+    private final FriendStorage friendStorage;
 
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
-
-    public User getUser(Long id) {
-        User user = userStorage.getUser(id);
-        if (user == null) {
-            log.warn("пользователь с id = " + id + " не найден при получении");
-            throw new NotFoundException("user c таким id = " + id + " не найден");
-        }
-        return user;
-    }
-
-    public Collection<User> getUsers() {
-        return userStorage.getUsers();
+    public List<User> findAll() {
+        return userStorage.findAll();
     }
 
     public User create(User user) {
         validate(user);
-        return userStorage.add(user);
+        return userStorage.create(user);
     }
 
-    public User update(User newUser) {
-        if (newUser.getId() == null) {
-            log.warn("Попытка обновить user с пустым полем ID: {}", newUser);
-            throw new ConditionsNotMetException("Id должен быть указан");
+    public User update(User user) {
+        validate(user);
+        if (userStorage.findUserById(user.getId()).isEmpty()) {
+            throw new UserNotFoundException("Пользователь не найден.");
         }
-        if (!userStorage.search(newUser.getId())) {
-            log.warn("Попытка обновить user с несуществуещим ID");
-            throw new NotFoundException("User с таким id = " + newUser.getId() + " не найден");
+        return userStorage.update(user);
+    }
+
+    public User findUserById(int id) {
+        return userStorage.findUserById(id).orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+    }
+
+    public void addFriend(int id, int friendId) {
+        if (userStorage.findUserById(id).isEmpty() || userStorage.findUserById(friendId).isEmpty()) {
+            throw new UserNotFoundException("Пользователь не найден.");
         }
-        return userStorage.update(newUser);
+        if (id < 0 || friendId < 0) {
+            throw new UserNotFoundException("Пользователь не найден.");
+        }
+        friendStorage.addFriend(id, friendId);
+    }
+
+    public List<User> getFriends(int id) {
+        if (userStorage.findUserById(id).isEmpty()) {
+            throw new UserNotFoundException("Пользователь не найден.");
+        }
+        return friendStorage.findAllFriends(id);
+    }
+
+    public List<User> getMutualFriends(int id, int otherId) {
+        return friendStorage.findCommonFriends(id, otherId);
+    }
+
+    public void deleteFriend(int id, int friendId) {
+        if (userStorage.findUserById(id).isEmpty() || userStorage.findUserById(friendId).isEmpty()) {
+            throw new UserNotFoundException("Пользователь не найден.");
+        }
+        friendStorage.removeFriend(id, friendId);
     }
 
     private void validate(User user) {
-        if (user.getLogin().contains(" ")) {
-            log.warn("Попытка добавить user с некорректным login: {}", user);
-            throw new ValidationException("некорректный login;");
-        }
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
-        if (user.getBirthday() == null || user.getBirthday().isAfter(LocalDate.now())) {
-            log.warn("Попытка добавить user с некорректным birthday: {}", user);
-            throw new ValidationException("некорректный birthday;");
-        }
-    }
-
-    public User addToFriend(Long id, Long friendsId) {
-        User firstUser = getUser(id);
-        User secondUser = getUser(friendsId);
-        firstUser.addFriendsId(friendsId);
-        secondUser.addFriendsId(id);
-        return firstUser;
-    }
-
-    public void deleteFromFriends(Long id, Long friendsId) {
-        User firstUser = getUser(id);
-        User secondUser = getUser(friendsId);
-        firstUser.deleteFriendsId(friendsId);
-        secondUser.deleteFriendsId(id);
-    }
-
-    public Collection<User> getFriends(Long id) {
-        return getUser(id).getFriendsId().stream()
-                .map(this::getUser)
-                .collect(Collectors.toList());
-    }
-
-    public Collection<User> getMutualFriends(Long id, Long otherId) {
-        return userStorage.getMutualFriendsFromDB(id, otherId);
     }
 }
-
-
 

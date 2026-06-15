@@ -1,38 +1,41 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.annotation.ReleaseDate;
 
-
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedHashSet;
 
-@Slf4j
+
 @Data
+@Builder
 public class Film {
-
-    private Long id;
-    @NotBlank
+    private Integer id;
+    @NotBlank(message = "Введите название фильма.")
     private String name;
-    @Size(max = 200)
+    @NotNull
+    @Size(max = 200, message = "Слишком длинное описание.")
     private String description;
     @NotNull
+    @ReleaseDate(value = "1895-12-28", message = "Введите дату релиза не ранее 28 декабря 1895 года.")
     private LocalDate releaseDate;
+    @Positive(message = "Продолжительность фильма должна быть больше 0.")
+    private Integer duration;
     @NotNull
-    @Min(1)
-    private Long duration;
-    private Set<Long> likedByUserIds = new HashSet<>();
+    private Mpa mpa;
+    private final LinkedHashSet<Genre> genres = new LinkedHashSet<>();
 
-    public void addUserLike(Long userId) {
-        likedByUserIds.add(userId);
-    }
-
-    public boolean deleteUserLike(Long userId) {
-        return likedByUserIds.remove(userId);
+    public boolean validateGenres() {
+        for (Genre genre : genres) {
+            if (!Genre.existsById(genre.getId())) {
+                return false;
+            }
+        }
+        return true;
     }
 }

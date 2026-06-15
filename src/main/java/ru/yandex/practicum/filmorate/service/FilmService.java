@@ -1,90 +1,89 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.GenreNotFoundException;
+import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.storage.*;
 
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import java.util.List;
 
-import java.time.LocalDate;
-import java.util.Collection;
-
-
+@RequiredArgsConstructor
 @Service
-@Slf4j
 public class FilmService {
-    private static final LocalDate OLDEST_FILM = LocalDate.of(1895, 12, 28);
-
     private final FilmStorage filmStorage;
+    private final MpaStorage mpaStorage;
+    private final GenreStorage genreStorage;
+    private final LikeStorage likeStorage;
     private final UserStorage userStorage;
 
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
+    public Film create(Film film) {
+        if (film.getMpa() == null || !Mpa.containsId(film.getMpa().getId())) {
+            throw new MpaNotFoundException("Неверный MPA");
+        }
+        if (film.getGenres() == null || !film.validateGenres()) {
+            throw new GenreNotFoundException("Неверный жанр");
+        }
+        return filmStorage.create(film);
     }
 
-    public Film getFilm(Long id) {
-        Film film = filmStorage.getFilm(id);
-        if (film == null) {
-            log.warn("фильм с id = " + id + " не найден при получении");
-            throw new NotFoundException("фильм c таким id = " + id + " не найден");
+    public Film update(Film film) {
+        if (filmStorage.findFilmById(film.getId()).isEmpty()) {
+            throw new FilmNotFoundException("Фильм не найден.");
         }
+        return filmStorage.update(film);
+    }
+
+    public List<Film> findAllFilms() {
+        List<Film> films = filmStorage.findAllFilms();
+        genreStorage.findAllGenresByFilm(films);
+        return films;
+    }
+
+    public Film findFilmById(int id) {
+        Film film = filmStorage.findFilmById(id).orElseThrow(() -> new FilmNotFoundException("Фильм не найден."));
+        genreStorage.findAllGenresByFilm(List.of(film));
         return film;
     }
 
-    public Collection<Film> getFilms() {
-        return filmStorage.getFilms();
-    }
-
-    public Film create(Film film) {
-        validate(film);
-        return filmStorage.add(film);
-    }
-
-    public Film update(Film newFilm) {
-        if (newFilm.getId() == null) {
-            log.warn("Попытка обновить фильм с пустым полем ID: {}", newFilm);
-            throw new ConditionsNotMetException("Id должен быть указан");
+    public void addLike(int id, int userId) {
+        if (userStorage.findUserById(id).isEmpty() || userStorage.findUserById(userId).isEmpty()) {
+            throw new UserNotFoundException("Пользователь не найден.");
         }
-        if (!filmStorage.search(newFilm.getId())) {
-            log.warn("Попытка обновить фильм с несущестсвуещим ID");
-            throw new NotFoundException("Фильм с таким id = " + newFilm.getId() + " не найден");
+        likeStorage.addLike(id, userId);
+    }
+
+    public void deleteLike(int id, int userId) {
+        if (userStorage.findUserById(id).isEmpty() || userStorage.findUserById(userId).isEmpty()) {
+            throw new UserNotFoundException("Пользователь не найден.");
         }
-        return filmStorage.update(newFilm);
+        likeStorage.removeLike(id, userId);
     }
 
-    private void validate(Film film) {
-        if (film.getReleaseDate().isBefore(OLDEST_FILM)) {
-            log.warn("Попытка добавить фильм с неверной датой релиза: {}", film);
-            throw new ValidationException("дата релиза — не раньше 28 декабря 1895 года");
-        }
-
+    public List<Film> getPopularFilms(int count) {
+        List<Film> films = filmStorage.findPopular(count);
+        genreStorage.findAllGenresByFilm(films);
+        return films;
     }
 
-    public void addLike(Long id, Long userId) {
-        if (!userStorage.search(userId)) { // здесь я проверяю user-a, что он есть, чтобы он поставил лайк
-            log.warn("User c таким id " + id + " не найден при добавлении лайка");
-            throw new NotFoundException("User c таким id " + id + " не найден");
-        }
-        getFilm(id).addUserLike(userId); // здесь я исправил, и если фильма нет, будет NotFound
+    public List<Mpa> findAllMpa() {
+        return mpaStorage.findAllMpa();
     }
 
-    public void deleteLike(Long id, Long userId) {
-        boolean isFriend = getFilm(id).deleteUserLike(userId);
-        if (!isFriend) {
-            log.warn("User c id = " + userId + " не ставил лайк");
-            throw new NotFoundException("User c id = " + userId + " не ставил лайк");
-        }
+    public Mpa findMpaById(int id) {
+        return mpaStorage.findMpaById(id).orElseThrow(() -> new MpaNotFoundException("Рейтинг MPA не найден."));
     }
 
-    public Collection<Film> getPopularFilms(Long count) {
-        return filmStorage.getPopularFilmsFromDB(count);
+    public List<Genre> findAllGenres() {
+        return genreStorage.findAllGenres();
     }
 
+    public Genre findGenreById(int id) {
+        return genreStorage.findGenreById(id).orElseThrow(() -> new GenreNotFoundException("Жанр не найден."));
+    }
 }
