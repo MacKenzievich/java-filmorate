@@ -29,10 +29,9 @@ class FilmDbStorageTest {
 
     @BeforeEach
     public void setUp() {
-        // создаем и вставляем фильм
         Film film = createTestFilm();
         Film savedFilm = storage.create(film);
-        insertedFilmId = savedFilm.getId(); // запоминаем ID для поиска
+        insertedFilmId = savedFilm.getId();
     }
 
 
@@ -48,22 +47,17 @@ class FilmDbStorageTest {
 
     @Test
     public void testCreateFilm() {
-        // Создаем тестовый фильм
-        Film film = createTestFilm(); // Название: "Test Film", описание: "Test Description" и т.д.
+        Film film = createTestFilm();
 
-        // Вставляем в базу
         Film savedFilm = storage.create(film);
 
-        // Проверяем, что ID присвоен (база вернула айди после вставки)
         assertThat(savedFilm.getId()).isNotNull();
 
-        // Проверяем, что все поля верно сохранены
         assertThat(savedFilm)
                 .hasFieldOrPropertyWithValue("name", "Test Film")
                 .hasFieldOrPropertyWithValue("description", "Test Description")
                 .hasFieldOrPropertyWithValue("releaseDate", LocalDate.of(2000, 1, 1))
                 .hasFieldOrPropertyWithValue("duration", 120);
-        // Проверяем, что MPA тоже правильное
         assertThat(savedFilm.getMpa()).isEqualTo(Mpa.G);
     }
 
@@ -76,6 +70,36 @@ class FilmDbStorageTest {
                 .hasValueSatisfying(user ->
                         assertThat(user).hasFieldOrPropertyWithValue("id", insertedFilmId)
                 );
+    }
+
+    @Test
+    public void testUpdateFilm() {
+        Film updatedFilm = createTestFilm();
+        updatedFilm.setId(insertedFilmId);
+        updatedFilm.setName("Updated Name");
+        updatedFilm.setDescription("Updated Description");
+        updatedFilm.setDuration(150);
+        storage.update(updatedFilm);
+        Optional<Film> filmFromDb = storage.findFilmById(insertedFilmId);
+        assertThat(filmFromDb).isPresent();
+        assertThat(filmFromDb.get())
+                .hasFieldOrPropertyWithValue("name", "Updated Name")
+                .hasFieldOrPropertyWithValue("description", "Updated Description")
+                .hasFieldOrPropertyWithValue("duration", 150);
+    }
+
+    @Test
+    public void testFindAllFilms() {
+        var films = storage.findAllFilms();
+        assertThat(films).isNotEmpty();
+        assertThat(films).anySatisfy(film -> assertThat(film).hasFieldOrPropertyWithValue("id", insertedFilmId));
+    }
+
+    @Test
+    public void testFindPopular() {
+        int count = 3;
+        var popularFilms = storage.findPopular(count);
+        assertThat(popularFilms).hasSizeLessThanOrEqualTo(count);
     }
 
 }

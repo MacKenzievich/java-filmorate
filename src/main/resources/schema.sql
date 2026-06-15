@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS friendship
     PRIMARY KEY (user_id, friend_id),
     user_id   INT,
     friend_id INT,
+    status boolean,
     FOREIGN KEY (user_id) REFERENCES users (user_id),
     FOREIGN KEY (friend_id) REFERENCES users (user_id)
 );
