@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import javax.annotation.PostConstruct;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,10 +20,25 @@ import java.util.Optional;
 @Repository
 public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final SqlFileReader fileReader;
+
+    private String insertUserSql;
+    private String selectAllUsersSql;
+    private String selectUserByIdSql;
+    private String updateUserSql;
+
+
+    @PostConstruct
+    public void init() {
+        insertUserSql = fileReader.readSqlFile("/user/insertUser.sql");
+        selectAllUsersSql = fileReader.readSqlFile("/user/selectAllUsers.sql");
+        selectUserByIdSql = fileReader.readSqlFile("/user/selectUserById.sql");
+        updateUserSql = fileReader.readSqlFile("/user/updateUser.sql");
+    }
 
     @Override
     public User create(User user) {
-        String sql = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
+        String sql = insertUserSql;
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
@@ -39,20 +55,20 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        String sql = "UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?";
+        String sql = updateUserSql;
         jdbcTemplate.update(sql, user.getEmail(), user.getLogin(), user.getName(), user.getBirthday(), user.getId());
         return user;
     }
 
     @Override
     public List<User> findAll() {
-        String sql = "SELECT user_id, login, name, email, birthday FROM users";
+        String sql = selectAllUsersSql;
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs));
     }
 
     @Override
     public Optional<User> findUserById(int id) {
-        String sql = "SELECT * FROM users WHERE user_id = ?";
+        String sql = selectUserByIdSql;
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs), id).stream().findFirst();
     }
 

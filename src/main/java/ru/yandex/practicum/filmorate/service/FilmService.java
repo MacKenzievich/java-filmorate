@@ -22,14 +22,23 @@ public class FilmService {
     private final LikeStorage likeStorage;
     private final UserStorage userStorage;
 
+
     public Film create(Film film) {
+        validateMpa(film);
+        validateGenres(film);
+        return filmStorage.create(film);
+    }
+
+    private void validateMpa(Film film) {
         if (film.getMpa() == null || !Mpa.containsId(film.getMpa().getId())) {
             throw new MpaNotFoundException("Неверный MPA");
         }
+    }
+
+    private void validateGenres(Film film) {
         if (film.getGenres() == null || !film.validateGenres()) {
             throw new GenreNotFoundException("Неверный жанр");
         }
-        return filmStorage.create(film);
     }
 
     public Film update(Film film) {
@@ -86,4 +95,6 @@ public class FilmService {
     public Genre findGenreById(int id) {
         return genreStorage.findGenreById(id).orElseThrow(() -> new GenreNotFoundException("Жанр не найден."));
     }
+
+
 }

@@ -5,20 +5,32 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.storage.LikeStorage;
 
+import javax.annotation.PostConstruct;
+
 @RequiredArgsConstructor
 @Repository
 public class LikeBbStorage implements LikeStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final SqlFileReader fileReader;
+
+    private String addLikeSql;
+    private String removeLikeSql;
+
+    @PostConstruct
+    public void init() {
+        addLikeSql = fileReader.readSqlFile("/like/addLike.sql");
+        removeLikeSql = fileReader.readSqlFile("/like/removeLike.sql");
+    }
 
     @Override
     public void addLike(int id, int userId) {
-        String sql = "INSERT INTO likes (film_id, user_id) VALUES (?, ?)";
+        String sql = addLikeSql;
         jdbcTemplate.update(sql, id, userId);
     }
 
     @Override
     public void removeLike(int id, int userId) {
-        String sql = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
+        String sql = removeLikeSql;
         jdbcTemplate.update(sql, id, userId);
     }
 }
