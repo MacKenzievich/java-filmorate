@@ -2,8 +2,9 @@ package ru.yandex.practicum.filmorate.dao;
 
 
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.StreamUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
+
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

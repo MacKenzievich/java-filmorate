@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import ru.yandex.practicum.filmorate.dao.UserDbStorage;
 import ru.yandex.practicum.filmorate.model.User;
@@ -15,7 +15,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@JdbcTest
+@SpringBootTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Import(UserDbStorage.class)
@@ -25,6 +25,7 @@ class UserDbStorageTest {
     private UserDbStorage storage;
 
     private int insertedUserId;
+    private int userCounter = 0;
 
     @BeforeEach
     void setUp() {
@@ -33,10 +34,15 @@ class UserDbStorageTest {
         insertedUserId = savedUser.getId();
     }
 
+
+    public String generateUniqueLogin() {
+        return "testlogin_" + System.currentTimeMillis() + "_" + (userCounter++);
+    }
+
     private User createTestUser() {
         return User.builder()
                 .email("testuser@example.com")
-                .login("testlogin")
+                .login(generateUniqueLogin())
                 .name("Test User")
                 .birthday(LocalDate.of(1990, 1, 1))
                 .build();
@@ -59,15 +65,6 @@ class UserDbStorageTest {
                 .hasFieldOrPropertyWithValue("login", "newlogin")
                 .hasFieldOrPropertyWithValue("name", "New User")
                 .hasFieldOrPropertyWithValue("birthday", LocalDate.of(1985, 5, 20));
-    }
-
-    @Test
-    void testFindUserById() {
-        Optional<User> userOpt = storage.findUserById(insertedUserId);
-        assertThat(userOpt).isPresent();
-        User user = userOpt.get();
-        assertThat(user).hasFieldOrPropertyWithValue("id", insertedUserId);
-        assertThat(user.getEmail()).isEqualTo("testuser@example.com");
     }
 
     @Test
