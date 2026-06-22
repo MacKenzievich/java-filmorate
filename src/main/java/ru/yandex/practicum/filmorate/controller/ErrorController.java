@@ -2,15 +2,14 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.*;
 
 @RestControllerAdvice
 public class ErrorController {
 
-    @ExceptionHandler(NotFoundException.class)
+    @ExceptionHandler({NotFoundException.class, FilmNotFoundException.class, GenreNotFoundException.class, MpaNotFoundException.class, UserNotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFoundException(final NotFoundException e) {
+    public ErrorResponse handleNotFoundException(final RuntimeException e) {
         return new ErrorResponse("Ошибка", e.getMessage());
     }
 

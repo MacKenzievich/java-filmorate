@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
+import javax.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -21,7 +22,7 @@ public class FilmController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Collection<Film> findAll() {
-        return service.getFilms();
+        return service.findAllFilms();
     }
 
     @PostMapping
@@ -37,26 +38,26 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Film getFilm(@PathVariable Long id) {
-        return service.getFilm(id);
+    @ResponseStatus(HttpStatus.OK)
+    public Film getFilm(@PathVariable int id) {
+        return service.findFilmById(id);
     }
 
     @PutMapping("/{id}/like/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void addLike(@PathVariable long id, @PathVariable Long userId) {
+    public void addLike(@PathVariable int id, @PathVariable int userId) {
         service.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteLike(@PathVariable long id, @PathVariable Long userId) {
+    public void deleteLike(@PathVariable int id, @PathVariable int userId) {
         service.deleteLike(id, userId);
     }
 
     @GetMapping("/popular")
     @ResponseStatus(HttpStatus.OK)
-    public Collection<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") Long count) {
+    public Collection<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
         return service.getPopularFilms(count);
     }
 }
