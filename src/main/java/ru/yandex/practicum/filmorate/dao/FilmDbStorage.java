@@ -70,8 +70,13 @@ public class FilmDbStorage implements FilmStorage {
             ORDER BY f.film_id
             """;
 
-    private static final String SELECT_COMMON_FILMS_SQL = """
-            
+    private static final String SELECT_COMMON_FILMS_SQL = SELECT_FILMS_SQL + """
+            LEFT JOIN likes ON f.film_id = likes.film_id
+            LEFT JOIN users ON likes.user_id = users.user_id
+            INNER JOIN likes l1 ON f.film_id = l1.film_id AND l1.user_id = ?
+            INNER JOIN likes l2 ON f.film_id = l2.film_id AND l2.user_id = ?
+            GROUP BY f.film_id
+            ORDER BY COUNT(likes.film_id) DESC
             """;
 
 
@@ -156,9 +161,10 @@ public class FilmDbStorage implements FilmStorage {
                     });
         }
     }
-    public List<Film> findCommonFilms(int userId, int friendId){
-        String sql = ;
-        jdbcTemplate.query(SELECT_FILMS_SQL + " " + SELECT_POPULAR_FILMS_SQL + " " +  );
+
+    public List<Film> findCommonFilms(int userId, int friendId) {
+        String sql = SELECT_COMMON_FILMS_SQL;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), userId, friendId);
     }
 
 
