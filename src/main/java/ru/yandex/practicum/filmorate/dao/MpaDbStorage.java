@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
-import javax.annotation.PostConstruct;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -16,26 +15,24 @@ import java.util.Optional;
 @Repository
 public class MpaDbStorage implements MpaStorage {
     private final JdbcTemplate jdbcTemplate;
-    private final SqlFileReader fileReader;
 
-    private String findAllMpaSql;
-    private String findMpaByIdSql;
+    private static final String FIND_ALL_MPA_SQL = """
+            SELECT * FROM mpa_rating
+            """;
+    private static final String FIND_MPA_BY_ID_SQL = """
+            SELECT * FROM mpa_rating where rating_id = ?
+            """;
 
-    @PostConstruct
-    public void init() {
-        findAllMpaSql = fileReader.readSqlFile("/mpa/findAllMpa.sql");
-        findMpaByIdSql = fileReader.readSqlFile("/mpa/findMpaById.sql");
-    }
 
     @Override
     public List<Mpa> findAllMpa() {
-        String sql = findAllMpaSql;
+        String sql = FIND_ALL_MPA_SQL;
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeMpa(rs));
     }
 
     @Override
     public Optional<Mpa> findMpaById(int id) {
-        String sql = findMpaByIdSql;
+        String sql = FIND_MPA_BY_ID_SQL;
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeMpa(rs), id).stream().findFirst();
     }
 

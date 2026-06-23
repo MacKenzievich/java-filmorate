@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import javax.annotation.PostConstruct;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,33 +23,57 @@ import java.util.Set;
 @Repository
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
-    private final SqlFileReader fileReader;
 
-    private String selectFilmsSql;
-    private String insertFilmSql;
-    private String insertFilmGenreSql;
-    private String selectFilmByIdSql;
-    private String deleteFilmGenresSql;
-    private String selectPopularFilmsSql;
-    private String updateFilmSql;
-    private String selectAllFilmsSql;
-
-    @PostConstruct
-    public void init() {
-        selectFilmsSql = fileReader.readSqlFile("/film/selectFilm.sql");
-        insertFilmSql = fileReader.readSqlFile("/film/insertFilm.sql");
-        insertFilmGenreSql = fileReader.readSqlFile("/film/insertFilmGenre.sql");
-        selectFilmByIdSql = fileReader.readSqlFile("/film/selectFilmById.sql");
-        deleteFilmGenresSql = fileReader.readSqlFile("/film/deleteFilmGenres.sql");
-        selectPopularFilmsSql = fileReader.readSqlFile("/film/selectPopularFilms.sql");
-        updateFilmSql = fileReader.readSqlFile("/film/updateFilm.sql");
-        selectAllFilmsSql = fileReader.readSqlFile("/film/selectAllFilms.sql");
-    }
+    private static final String SELECT_FILMS_SQL = """
+            SELECT f.film_id,
+                   f.name,
+                   f.description,
+                   f.releaseDate,
+                   f.duration,
+                   mpa.rating_id,
+                   mpa.name AS mpa_name
+            FROM films AS f
+            INNER JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id
+            """;
+    private static final String INSERT_FILM_SQL = """
+            INSERT INTO films (name, description, releaseDate, duration, rating_id)
+            VALUES (?, ?, ?, ?, ?)
+            """;
+    private static final String INSERT_FILM_GENRE_SQL = """
+            INSERT INTO film_genres (film_id, genre_id)
+            VALUES (?, ?)
+            """;
+    private static final String SELECT_FILM_BY_ID_SQL = """
+            WHERE f.film_id = ?
+            """;
+    private static final String DELETE_FILM_GENRES_SQL = """
+            DELETE
+            FROM film_genres
+            WHERE film_id = ?
+            """;
+    private static final String SELECT_POPULAR_FILMS_SQL = """
+            LEFT JOIN likes ON f.film_id = likes.film_id
+            GROUP BY f.film_id
+            ORDER BY COUNT(likes.film_id) DESC
+            LIMIT ?
+            """;
+    private static final String UPDATE_FILM_SQL = """
+            UPDATE films
+            SET name        = ?,
+                description = ?,
+                releaseDate = ?,
+                duration    = ?,
+                rating_id   = ?
+            WHERE film_id = ?
+            """;
+    private static final String SELECT_ALL_FILMS_SQL = """
+            ORDER BY f.film_id
+            """;
 
 
     @Override
     public Film create(Film film) {
-        String sql = insertFilmSql;
+        String sql = INSERT_FILM_SQL;
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(
                 connection -> {
@@ -71,7 +94,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         int id = film.getId();
-        String sql = updateFilmSql;
+        String sql = UPDATE_FILM_SQL;
         jdbcTemplate.update(sql, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(),
                 film.getMpa().getId(), id);
         updateGenres(film.getGenres(), id);
@@ -80,20 +103,20 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> findAllFilms() {
-        String sql = selectAllFilmsSql;
-        return jdbcTemplate.query(selectFilmsSql + " " + sql, (rs, rowNum) -> makeFilm(rs));
+        String sql = SELECT_ALL_FILMS_SQL;
+        return jdbcTemplate.query(SELECT_FILMS_SQL + " " + sql, (rs, rowNum) -> makeFilm(rs));
     }
 
     @Override
     public Optional<Film> findFilmById(int id) {
-        String sql = selectFilmByIdSql;
-        return jdbcTemplate.query(selectFilmsSql + " " + sql, (rs, rowNum) -> makeFilm(rs), id).stream().findFirst();
+        String sql = SELECT_FILM_BY_ID_SQL;
+        return jdbcTemplate.query(SELECT_FILMS_SQL + " " + sql, (rs, rowNum) -> makeFilm(rs), id).stream().findFirst();
     }
 
     @Override
     public List<Film> findPopular(int count) {
-        String sql = selectPopularFilmsSql;
-        return jdbcTemplate.query(selectFilmsSql + " " + sql, (rs, rowNum) -> makeFilm(rs), count);
+        String sql = SELECT_POPULAR_FILMS_SQL;
+        return jdbcTemplate.query(SELECT_FILMS_SQL + " " + sql, (rs, rowNum) -> makeFilm(rs), count);
     }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
@@ -110,9 +133,9 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void updateGenres(Set<Genre> genres, int id) {
-        jdbcTemplate.update(deleteFilmGenresSql, id);
+        jdbcTemplate.update(DELETE_FILM_GENRES_SQL, id);
         if (genres.size() > 0) {
-            String sql = insertFilmGenreSql;
+            String sql = INSERT_FILM_GENRE_SQL;
             Genre[] g = genres.toArray(new Genre[genres.size()]);
             jdbcTemplate.batchUpdate(
                     sql,
