@@ -70,6 +70,10 @@ public class FilmDbStorage implements FilmStorage {
             ORDER BY f.film_id
             """;
 
+    private static final String SELECT_COMMON_FILMS_SQL = """
+            
+            """;
+
 
     @Override
     public Film create(Film film) {
@@ -151,6 +155,10 @@ public class FilmDbStorage implements FilmStorage {
                         }
                     });
         }
+    }
+    public List<Film> findCommonFilms(int userId, int friendId){
+        String sql = ;
+        jdbcTemplate.query(SELECT_FILMS_SQL + " " + SELECT_POPULAR_FILMS_SQL + " " +  );
     }
 
 

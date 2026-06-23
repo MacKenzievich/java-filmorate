@@ -96,5 +96,8 @@ public class FilmService {
         return genreStorage.findGenreById(id).orElseThrow(() -> new GenreNotFoundException("Жанр не найден."));
     }
 
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        return filmStorage.findCommonFilms(userId, friendId);
+    }
 
 }
