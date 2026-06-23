@@ -1,1 +1,0 @@
-SELECT * FROM mpa_rating where rating_id = ?

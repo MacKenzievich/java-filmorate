@@ -1,1 +1,0 @@
-UPDATE friendship SET status = FALSE WHERE user_id = ? AND friend_id = ?

@@ -1,1 +1,0 @@
-SELECT user_id, login, name, email, birthday FROM users

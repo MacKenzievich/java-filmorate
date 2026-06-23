@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 
-import javax.annotation.PostConstruct;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -22,37 +21,37 @@ import static java.util.function.UnaryOperator.identity;
 @Repository
 public class GenreDbStorage implements GenreStorage {
     private final JdbcTemplate jdbcTemplate;
-    private final SqlFileReader fileReader;
 
-
-    private String findAllGenresSql;
-    private String findGenreByIdSql;
-    private String findAllGenresByFilmSql;
-
-
-    @PostConstruct
-    public void init() {
-        findAllGenresSql = fileReader.readSqlFile("/genre/findAllGenres.sql");
-        findGenreByIdSql = fileReader.readSqlFile("/genre/findGenreById.sql");
-        findAllGenresByFilmSql = fileReader.readSqlFile("/genre/findAllGenresByFilm.sql");
-    }
+    private static final String FIND_ALL_GENRES_SQL = """
+            SELECT * FROM genres
+            """;
+    private static final String FIND_GENRE_BY_ID_SQL = """
+            SELECT * FROM genres WHERE genre_id = ?
+            """;
+    private static final String FIND_ALL_GENRES_BY_FILM_SQL = """
+            SELECT *
+            FROM GENRES g,
+                 film_genres fg
+            WHERE fg.genre_id = g.genre_id
+              AND fg.film_id IN (%s)
+            """;
 
     @Override
     public List<Genre> findAllGenres() {
-        String sql = findAllGenresSql;
+        String sql = FIND_ALL_GENRES_SQL;
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeGenre(rs));
     }
 
     @Override
     public Optional<Genre> findGenreById(int id) {
-        String sql = findGenreByIdSql;
+        String sql = FIND_GENRE_BY_ID_SQL;
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeGenre(rs), id).stream().findFirst();
     }
 
     @Override
     public void findAllGenresByFilm(List<Film> films) {
         final Map<Integer, Film> filmById = films.stream().collect(Collectors.toMap(Film::getId, identity()));
-        String sql = findAllGenresByFilmSql;
+        String sql = FIND_ALL_GENRES_BY_FILM_SQL;
         String inSql = String.join(",", Collections.nCopies(films.size(), "?"));
         jdbcTemplate.query(String.format(sql, inSql),
                 filmById.keySet().toArray(),
