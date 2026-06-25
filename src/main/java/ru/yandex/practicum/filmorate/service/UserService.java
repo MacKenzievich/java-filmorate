@@ -64,6 +64,13 @@ public class UserService {
         friendStorage.removeFriend(id, friendId);
     }
 
+    public void deleteUser(int id) {
+        if (userStorage.findUserById(id).isEmpty()) {
+            throw new UserNotFoundException("Пользователь не найден");
+        }
+        userStorage.deleteUser(id);
+    }
+
     private void validate(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
