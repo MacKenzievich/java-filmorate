@@ -3,8 +3,11 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.FriendStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
@@ -14,6 +17,8 @@ import java.util.List;
 public class UserService {
     private final UserStorage userStorage;
     private final FriendStorage friendStorage;
+    private final FilmStorage filmStorage;
+    private final GenreStorage genreStorage;
 
     public List<User> findAll() {
         return userStorage.findAll();
@@ -34,6 +39,18 @@ public class UserService {
 
     public User findUserById(int id) {
         return userStorage.findUserById(id).orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+    }
+
+    public List<Film> getRecommendations(int id) {
+        if (userStorage.findUserById(id).isEmpty()) {
+            throw new UserNotFoundException("Пользователь не найден.");
+        }
+
+        List<Film> recommendations = filmStorage.findRecommendations(id);
+        if (!recommendations.isEmpty()) {
+            genreStorage.findAllGenresByFilm(recommendations);
+        }
+        return recommendations;
     }
 
     public void addFriend(int id, int friendId) {

@@ -57,6 +57,38 @@ public class FilmDbStorage implements FilmStorage {
             ORDER BY COUNT(likes.film_id) DESC
             LIMIT ?
             """;
+    private static final String SELECT_RECOMMENDATIONS_SQL = """
+            WITH most_similar_user AS (
+                SELECT other_likes.user_id, COUNT(*) AS common_likes
+                FROM likes AS user_likes
+                INNER JOIN likes AS other_likes
+                        ON user_likes.film_id = other_likes.film_id
+                       AND user_likes.user_id <> other_likes.user_id
+                WHERE user_likes.user_id = ?
+                GROUP BY other_likes.user_id
+                ORDER BY common_likes DESC, other_likes.user_id
+                LIMIT 1
+            )
+            SELECT f.film_id,
+                   f.name,
+                   f.description,
+                   f.releaseDate,
+                   f.duration,
+                   mpa.rating_id,
+                   mpa.name AS mpa_name
+            FROM most_similar_user AS similar
+            INNER JOIN likes AS recommended_likes
+                    ON recommended_likes.user_id = similar.user_id
+            INNER JOIN films AS f
+                    ON f.film_id = recommended_likes.film_id
+            INNER JOIN mpa_rating AS mpa
+                    ON f.rating_id = mpa.rating_id
+            LEFT JOIN likes AS own_likes
+                   ON own_likes.film_id = f.film_id
+                  AND own_likes.user_id = ?
+            WHERE own_likes.film_id IS NULL
+            ORDER BY f.film_id
+            """;
     private static final String UPDATE_FILM_SQL = """
             UPDATE films
             SET name        = ?,
@@ -117,6 +149,12 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> findPopular(int count) {
         String sql = SELECT_POPULAR_FILMS_SQL;
         return jdbcTemplate.query(SELECT_FILMS_SQL + " " + sql, (rs, rowNum) -> makeFilm(rs), count);
+    }
+
+    @Override
+    public List<Film> findRecommendations(int userId) {
+        return jdbcTemplate.query(SELECT_RECOMMENDATIONS_SQL,
+                (rs, rowNum) -> makeFilm(rs), userId, userId);
     }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
