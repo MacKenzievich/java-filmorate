@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -41,6 +42,12 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     public User getUser(@PathVariable int id) {
         return service.findUserById(id);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<Film> getRecommendations(@PathVariable int id) {
+        return service.getRecommendations(id);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
