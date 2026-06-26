@@ -96,7 +96,7 @@ class FilmDbStorageTest {
     @Test
     public void testFindPopular() {
         int count = 3;
-        var popularFilms = storage.findPopular(count);
+        var popularFilms = storage.findPopular(count, null, null);
         assertThat(popularFilms).hasSizeLessThanOrEqualTo(count);
     }
 
