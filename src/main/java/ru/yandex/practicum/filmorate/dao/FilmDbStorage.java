@@ -69,6 +69,9 @@ public class FilmDbStorage implements FilmStorage {
     private static final String SELECT_ALL_FILMS_SQL = """
             ORDER BY f.film_id
             """;
+    private static final String DELETE_FILM_SQL = """
+            DELETE FROM films WHERE film_id = ?
+            """;
 
 
     @Override
@@ -117,6 +120,12 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> findPopular(int count) {
         String sql = SELECT_POPULAR_FILMS_SQL;
         return jdbcTemplate.query(SELECT_FILMS_SQL + " " + sql, (rs, rowNum) -> makeFilm(rs), count);
+    }
+
+    @Override
+    public void deleteFilm(int id) {
+        String sql = DELETE_FILM_SQL;
+        jdbcTemplate.update(sql, id);
     }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
