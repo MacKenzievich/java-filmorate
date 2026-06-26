@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -61,21 +62,34 @@ public class FilmService {
     }
 
     public void addLike(int id, int userId) {
-        if (userStorage.findUserById(id).isEmpty() || userStorage.findUserById(userId).isEmpty()) {
+        if (filmStorage.findFilmById(id).isEmpty()) {
+            throw new FilmNotFoundException("Фильм не найден.");
+        }
+        if (userStorage.findUserById(userId).isEmpty()) {
             throw new UserNotFoundException("Пользователь не найден.");
         }
         likeStorage.addLike(id, userId);
     }
 
     public void deleteLike(int id, int userId) {
-        if (userStorage.findUserById(id).isEmpty() || userStorage.findUserById(userId).isEmpty()) {
+        if (filmStorage.findFilmById(id).isEmpty()) {
+            throw new FilmNotFoundException("Фильм не найден.");
+        }
+        if (userStorage.findUserById(userId).isEmpty()) {
             throw new UserNotFoundException("Пользователь не найден.");
         }
         likeStorage.removeLike(id, userId);
     }
 
-    public List<Film> getPopularFilms(int count) {
-        List<Film> films = filmStorage.findPopular(count);
+    public List<Film> getPopularFilms(int count, Integer genreId, Integer year) {
+        if (count <= 0) {
+            throw new ValidationException("Количество фильмов должно быть больше нуля.");
+        }
+        if (genreId != null && genreStorage.findGenreById(genreId).isEmpty()) {
+            throw new GenreNotFoundException("Жанр не найден.");
+        }
+
+        List<Film> films = filmStorage.findPopular(count, genreId, year);
         genreStorage.findAllGenresByFilm(films);
         return films;
     }
