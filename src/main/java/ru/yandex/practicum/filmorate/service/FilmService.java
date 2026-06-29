@@ -97,9 +97,6 @@ public class FilmService {
     }
 
     public void deleteFilm(int id) {
-        if (filmStorage.findFilmById(id).isEmpty()) {
-            throw new FilmNotFoundException("Фильм не найден");
-        }
         filmStorage.deleteFilm(id);
     }
 

@@ -65,9 +65,6 @@ public class UserService {
     }
 
     public void deleteUser(int id) {
-        if (userStorage.findUserById(id).isEmpty()) {
-            throw new UserNotFoundException("Пользователь не найден");
-        }
         userStorage.deleteUser(id);
     }
 

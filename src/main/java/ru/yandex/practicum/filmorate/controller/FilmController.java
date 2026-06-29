@@ -61,6 +61,7 @@ public class FilmController {
     }
 
     @DeleteMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteFilm(@PathVariable int filmId) {
         service.deleteFilm(filmId);
     }
