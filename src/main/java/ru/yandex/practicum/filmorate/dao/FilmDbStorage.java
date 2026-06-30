@@ -87,7 +87,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private static final String SELECT_DIRECTORS_FILM_SORTED_BY_RELEASE_DATE_SQL = SELECT_FILMS_SQL + """
             INNER JOIN film_director as fd ON fd.film_id = f.film_id
-            where fd.director_id = ?
+            WHERE fd.director_id = ?
             """;
 
 
@@ -110,7 +110,6 @@ public class FilmDbStorage implements FilmStorage {
         updateDirectors(film.getDirectors(), film.getId());
         return film;
     }
-
 
     @Override
     public Film update(Film film) {
