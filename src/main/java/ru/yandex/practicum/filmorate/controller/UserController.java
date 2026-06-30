@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 
 import java.util.Collection;
+import java.util.List;
 
 @Validated
 @RequiredArgsConstructor
@@ -17,6 +19,7 @@ import java.util.Collection;
 @RequestMapping("/users")
 public class UserController {
     private final UserService service;
+    private final UserService userService;
 
 
     @GetMapping
@@ -71,5 +74,11 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable int userId) {
         service.deleteUser(userId);
+    }
+
+    @GetMapping("/{id}/feed")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Event> getFeed(@PathVariable int id) {
+        return userService.getFeed(id);
     }
 }
