@@ -29,6 +29,7 @@ public class Film {
     @NotNull
     private Mpa mpa;
     private final LinkedHashSet<Genre> genres = new LinkedHashSet<>();
+    private final LinkedHashSet<Director> directors = new LinkedHashSet<>();
 
     public boolean validateGenres() {
         for (Genre genre : genres) {
