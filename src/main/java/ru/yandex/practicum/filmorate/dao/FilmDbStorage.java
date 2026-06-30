@@ -135,6 +135,12 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(SELECT_FILMS_SQL + " " + sql, (rs, rowNum) -> makeFilm(rs), count);
     }
 
+    @Override
+    public void deleteFilm(int id) {
+        String sql = "DELETE FROM films WHERE film_id = ?";
+        jdbcTemplate.update(sql, id);
+    }
+
     private Film makeFilm(ResultSet rs) throws SQLException {
         Integer id = rs.getInt("film_id");
         Film film = Film.builder()

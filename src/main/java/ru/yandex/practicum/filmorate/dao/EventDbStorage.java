@@ -33,8 +33,8 @@ public class EventDbStorage implements EventStorage {
                 CREATE_EVENT_SQL,
                 event.getTimestamp(),
                 event.getUserId(),
-                event.getEventType(),
-                event.getOperation(),
+                event.getEventType().name(),
+                event.getOperation().name(),
                 event.getEntityId()
         );
     }

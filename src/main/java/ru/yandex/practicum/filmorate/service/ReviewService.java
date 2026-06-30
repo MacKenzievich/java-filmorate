@@ -6,7 +6,11 @@ import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ReviewNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -19,13 +23,28 @@ public class ReviewService {
     private final ReviewStorage reviewStorage;
     private final UserStorage userStorage;
     private final FilmStorage filmStorage;
+    private final EventStorage eventStorage;
 
     public Review create(Review review) {
         validateUser(review.getUserId());
         validateFilm(review.getFilmId());
         review.setReviewId(null);
         review.setUseful(0);
-        return reviewStorage.create(review);
+
+        Review createdReview = reviewStorage.create(review);
+
+        eventStorage.createEvent(
+                new Event(
+                        null,
+                        System.currentTimeMillis(),
+                        createdReview.getUserId(),
+                        EventType.REVIEW,
+                        Operation.ADD,
+                        createdReview.getReviewId()
+                )
+        );
+
+        return createdReview;
     }
 
     public Review update(Review review) {
@@ -35,11 +54,38 @@ public class ReviewService {
         Review savedReview = findById(review.getReviewId());
         savedReview.setContent(review.getContent());
         savedReview.setIsPositive(review.getIsPositive());
-        return reviewStorage.update(savedReview);
+        Review updatedReview = reviewStorage.update(savedReview);
+
+        eventStorage.createEvent(
+                new Event(
+                        null,
+                        System.currentTimeMillis(),
+                        updatedReview.getUserId(),
+                        EventType.REVIEW,
+                        Operation.UPDATE,
+                        updatedReview.getReviewId()
+
+        ));
+
+        return updatedReview;
     }
 
     public void delete(int reviewId) {
         findById(reviewId);
+
+        Review review = findById(reviewId);
+
+        eventStorage.createEvent(
+                new Event(
+                        null,
+                        System.currentTimeMillis(),
+                        review.getUserId(),
+                        EventType.REVIEW,
+                        Operation.REMOVE,
+                        reviewId
+                )
+        );
+
         reviewStorage.delete(reviewId);
     }
 
