@@ -60,12 +60,12 @@ public class ReviewService {
                 new Event(
                         null,
                         System.currentTimeMillis(),
-                        updatedReview.getUserId(),
+                        savedReview.getUserId(),
                         EventType.REVIEW,
                         Operation.UPDATE,
-                        updatedReview.getReviewId()
-
-        ));
+                        savedReview.getReviewId()
+                )
+        );
 
         return updatedReview;
     }

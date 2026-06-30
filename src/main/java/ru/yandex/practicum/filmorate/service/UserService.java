@@ -61,7 +61,6 @@ public class UserService {
                         friendId
                 )
         );
-
     }
 
     public List<User> getFriends(int id) {

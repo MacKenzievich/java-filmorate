@@ -14,5 +14,5 @@ public class Event {
     private int userId;
     private EventType eventType;
     private Operation operation;
-    private Integer entityId;
+    private int entityId;
 }

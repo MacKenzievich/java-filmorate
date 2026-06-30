@@ -59,13 +59,16 @@ public class FilmService {
         return film;
     }
 
-    public void addLike(int id, int userId) {
+    public void addLike(int filmId, int userId) {
 
-        if (userStorage.findUserById(id).isEmpty() || userStorage.findUserById(userId).isEmpty()) {
+        if (userStorage.findUserById(userId).isEmpty()) {
             throw new UserNotFoundException("Пользователь не найден.");
         }
 
-        likeStorage.addLike(id, userId);
+        filmStorage.findFilmById(filmId)
+                .orElseThrow(() -> new FilmNotFoundException("Фильм не найден."));
+
+        likeStorage.addLike(filmId, userId);
 
         eventStorage.createEvent(
                 new Event(
@@ -74,7 +77,7 @@ public class FilmService {
                         userId,
                         EventType.LIKE,
                         Operation.ADD,
-                        id
+                        filmId
                 )
         );
     }

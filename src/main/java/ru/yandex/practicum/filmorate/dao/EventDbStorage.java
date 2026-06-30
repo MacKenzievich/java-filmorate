@@ -24,9 +24,9 @@ public class EventDbStorage implements EventStorage {
             SELECT *
             FROM events
             WHERE user_id = ?
-            ORDER BY event_id
+            ORDER BY timestamp, event_id
             """;
-    
+
     @Override
     public void createEvent(Event event){
         jdbcTemplate.update(
@@ -38,12 +38,12 @@ public class EventDbStorage implements EventStorage {
                 event.getEntityId()
         );
     }
-    
+
     @Override
     public List<Event> findByUserId(int user_id) {
-        
+
         return jdbcTemplate.query(GET_USER_FEED, (rs, rowNum) -> {
-           
+
             Event event = new Event();
 
             event.setEventId(rs.getLong("event_id"));
