@@ -14,6 +14,8 @@ public interface FilmStorage {
 
     List<Film> findPopular(int count, Integer genreId, Integer year);
 
+    List<Film> findRecommendations(int userId);
+
     Optional<Film> findFilmById(int id);
 
     void deleteFilm(int id);
