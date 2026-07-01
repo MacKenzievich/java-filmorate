@@ -110,5 +110,11 @@ public class FilmService {
         return films;
     }
 
+    public List<Film> findFilmsByNameByDirector(String query, String by) {
+        List<Film> films = filmStorage.findFilmsByNameByDirector(query, by);
+        genreStorage.findAllGenresByFilm(films);
+        directorStorage.findAllDirectorsByFilm(films);
+        return films;
+    }
 
 }

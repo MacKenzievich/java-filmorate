@@ -38,13 +38,6 @@ public class DirectorDbStorage implements DirectorStorage {
             WHERE director_id = ?
             """;
 
-    private static final String FIND_ALL_DIRECTORS_BY_FILM_SQL = """
-            SELECT fd.film_id, d.director_id, d.director_name
-            FROM film_director fd
-            JOIN directors d ON fd.director_id = d.director_id
-            WHERE fd.film_id IN (?, ?);
-            """;
-
     @Override
     public Collection<Director> findAllDirectors() {
         String sql = SELECT_DIRECTORS_SQL;
@@ -86,21 +79,34 @@ public class DirectorDbStorage implements DirectorStorage {
 
     @Override
     public void findAllDirectorsByFilm(List<Film> films) {
+        if (films == null || films.isEmpty()) {
+            return;
+        }
         final Map<Integer, Film> filmById = films.stream()
                 .collect(Collectors.toMap(Film::getId, film -> film));
 
-        String sql = FIND_ALL_DIRECTORS_BY_FILM_SQL;
         String inSql = String.join(",", Collections.nCopies(films.size(), "?"));
 
-        jdbcTemplate.query(String.format(sql, inSql),
+        String sql = "SELECT fd.film_id, d.director_id, d.director_name "
+                + "FROM film_director fd "
+                + "JOIN directors d ON fd.director_id = d.director_id "
+                + "WHERE fd.film_id IN (" + inSql + ")";
+
+        jdbcTemplate.query(
+                sql,
                 filmById.keySet().toArray(),
                 (rs, rowNum) -> {
                     int filmId = rs.getInt("film_id");
                     Film film = filmById.get(filmId);
-                    Director director = makeDirector(rs);
-                    film.getDirectors().add(director);
-                    return director;
-                });
+                    if (film != null) {
+                        Director director = makeDirector(rs);
+                        if (director != null) {
+                            film.getDirectors().add(director);
+                        }
+                    }
+                    return null;
+                }
+        );
 
     }
 

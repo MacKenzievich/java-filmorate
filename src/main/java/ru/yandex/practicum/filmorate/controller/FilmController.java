@@ -63,7 +63,13 @@ public class FilmController {
 
     @GetMapping("/director/{directorId}")
     @ResponseStatus(HttpStatus.OK)
-    public Collection<Film> findSortFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
-       return service.findSortFilmsByDirector(directorId, sortBy);
+    public Collection<Film> getSortFilmsByDirector(@PathVariable int directorId, @RequestParam String sortBy) {
+        return service.findSortFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<Film> getFilmsByNameByDirector(@RequestParam String query, @RequestParam String by) {
+        return service.findFilmsByNameByDirector(query, by);
     }
 }

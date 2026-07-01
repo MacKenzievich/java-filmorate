@@ -147,14 +147,39 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public List<Film> findFilmsByNameByDirector(String query, String by) {
+        if (by.equals("director")) {
+            return findFilmsByDirector(query);
+        } else if (by.equals("title")) {
+            return findFilmsByTitle(query);
+        } else {
+            List<Film> filmsByTitle = findFilmsByTitle(query);
+            List<Film> filmsByDirector = findFilmsByDirector(query);
+            filmsByTitle.addAll(filmsByDirector);
+            return filmsByTitle;
+        }
+    }
+
+    @Override
     public List<Film> findPopular(int count) {
         String sql = SELECT_POPULAR_FILMS_SQL;
         return jdbcTemplate.query(SELECT_FILMS_SQL + " " + sql, (rs, rowNum) -> makeFilm(rs), count);
     }
 
-    private void createFilmWithDirector(int filmId, int directorId) {
-        String sql = "INSERT INTO film_director (film_id, director_id) VALUES (?, ?)";
-        jdbcTemplate.update(sql, filmId, directorId);
+    private List<Film> findFilmsByTitle(String query) {
+        String sql = SELECT_FILMS_SQL + """
+                WHERE f.name LIKE ?
+                """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), '%' + query + '%');
+    }
+
+    private List<Film> findFilmsByDirector(String query) {
+        String sql = SELECT_FILMS_SQL + """
+                INNER JOIN film_director as fd ON fd.film_id = f.film_id
+                INNER JOIN directors as d ON d.director_id = fd.director_id
+                WHERE d.director_name LIKE ?
+                """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), '%' + query + '%');
     }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
