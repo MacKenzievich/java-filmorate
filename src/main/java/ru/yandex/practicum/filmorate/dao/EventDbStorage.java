@@ -13,7 +13,6 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class EventDbStorage implements EventStorage {
-    
     private final JdbcTemplate jdbcTemplate;
     private static final String CREATE_EVENT_SQL = """
             INSERT INTO events
@@ -28,7 +27,7 @@ public class EventDbStorage implements EventStorage {
             """;
 
     @Override
-    public void createEvent(Event event){
+    public void createEvent(Event event) {
         jdbcTemplate.update(
                 CREATE_EVENT_SQL,
                 event.getTimestamp(),
