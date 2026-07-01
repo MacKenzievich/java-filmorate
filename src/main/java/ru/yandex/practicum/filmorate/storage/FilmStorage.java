@@ -25,4 +25,6 @@ public interface FilmStorage {
     void deleteFilm(int id);
 
     List<Film> findCommonFilms(int userId, int friendId);
+
+    List<Film> findFilmsByNameByDirector(String query, String by);
 }
