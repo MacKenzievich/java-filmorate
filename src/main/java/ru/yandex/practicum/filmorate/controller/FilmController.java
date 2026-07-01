@@ -37,6 +37,15 @@ public class FilmController {
         return service.update(newFilm);
     }
 
+    @GetMapping("/popular")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<Film> getPopularFilms(
+            @RequestParam(required = false, defaultValue = "10") int count,
+            @RequestParam(required = false) Integer genreId,
+            @RequestParam(required = false) Integer year) {
+        return service.getPopularFilms(count, genreId, year);
+    }
+
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Film getFilm(@PathVariable int id) {
@@ -55,9 +64,4 @@ public class FilmController {
         service.deleteLike(id, userId);
     }
 
-    @GetMapping("/popular")
-    @ResponseStatus(HttpStatus.OK)
-    public Collection<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
-        return service.getPopularFilms(count);
-    }
 }

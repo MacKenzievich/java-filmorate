@@ -15,6 +15,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -50,12 +51,6 @@ public class FilmDbStorage implements FilmStorage {
             DELETE
             FROM film_genres
             WHERE film_id = ?
-            """;
-    private static final String SELECT_POPULAR_FILMS_SQL = """
-            LEFT JOIN likes ON f.film_id = likes.film_id
-            GROUP BY f.film_id
-            ORDER BY COUNT(likes.film_id) DESC
-            LIMIT ?
             """;
     private static final String UPDATE_FILM_SQL = """
             UPDATE films
@@ -114,9 +109,41 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> findPopular(int count) {
-        String sql = SELECT_POPULAR_FILMS_SQL;
-        return jdbcTemplate.query(SELECT_FILMS_SQL + " " + sql, (rs, rowNum) -> makeFilm(rs), count);
+    public List<Film> findPopular(int count, Integer genreId, Integer year) {
+        StringBuilder sql = new StringBuilder(SELECT_FILMS_SQL);
+        List<Object> parameters = new ArrayList<>();
+
+        sql.append(" WHERE 1 = 1");
+
+        if (genreId != null) {
+            sql.append("""
+                     AND EXISTS (
+                         SELECT 1
+                         FROM film_genres AS fg
+                         WHERE fg.film_id = f.film_id
+                           AND fg.genre_id = ?
+                     )
+                    """);
+            parameters.add(genreId);
+        }
+
+        if (year != null) {
+            sql.append(" AND YEAR(f.releaseDate) = ?");
+            parameters.add(year);
+        }
+
+        sql.append("""
+                 ORDER BY (
+                     SELECT COUNT(*)
+                     FROM likes AS l
+                     WHERE l.film_id = f.film_id
+                 ) DESC,
+                 f.film_id ASC
+                 LIMIT ?
+                """);
+        parameters.add(count);
+
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> makeFilm(rs), parameters.toArray());
     }
 
     private Film makeFilm(ResultSet rs) throws SQLException {
