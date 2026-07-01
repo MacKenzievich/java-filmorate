@@ -165,7 +165,7 @@ public class FilmDbStorage implements FilmStorage {
                     });
         }
     }
-
+    @Override
     public List<Film> findCommonFilms(int userId, int friendId) {
         String sql = SELECT_COMMON_FILMS_SQL;
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), userId, friendId);
