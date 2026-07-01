@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+
 @RequiredArgsConstructor
 @Repository
 public class FilmDbStorage implements FilmStorage {
@@ -68,6 +69,22 @@ public class FilmDbStorage implements FilmStorage {
             """;
     private static final String SELECT_ALL_FILMS_SQL = """
             ORDER BY f.film_id
+            """;
+    private static final String DELETE_FILM_SQL = """
+            DELETE FROM films WHERE film_id = ?
+            """;
+    private static final String SELECT_RECOMMENDATIONS_FILMS = SELECT_FILMS_SQL + """
+                    LEFT JOIN likes ON f.film_id = likes.film_id
+                    LEFT JOIN users ON likes.user_id = users.user_id
+            """;
+
+    private static final String SELECT_COMMON_FILMS_SQL = SELECT_FILMS_SQL + """
+            LEFT JOIN likes ON f.film_id = likes.film_id
+            LEFT JOIN users ON likes.user_id = users.user_id
+            INNER JOIN likes l1 ON f.film_id = l1.film_id AND l1.user_id = ?
+            INNER JOIN likes l2 ON f.film_id = l2.film_id AND l2.user_id = ?
+            GROUP BY f.film_id
+            ORDER BY COUNT(likes.film_id) DESC
             """;
 
 
@@ -119,6 +136,12 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(SELECT_FILMS_SQL + " " + sql, (rs, rowNum) -> makeFilm(rs), count);
     }
 
+    @Override
+    public void deleteFilm(int id) {
+        String sql = "DELETE FROM films WHERE film_id = ?";
+        jdbcTemplate.update(sql, id);
+    }
+
     private Film makeFilm(ResultSet rs) throws SQLException {
         Integer id = rs.getInt("film_id");
         Film film = Film.builder()
@@ -153,5 +176,8 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-
+    public List<Film> findCommonFilms(int userId, int friendId) {
+        String sql = SELECT_COMMON_FILMS_SQL;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), userId, friendId);
+    }
 }

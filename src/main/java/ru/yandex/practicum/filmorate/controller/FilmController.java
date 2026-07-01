@@ -18,7 +18,6 @@ import java.util.Collection;
 public class FilmController {
     private final FilmService service;
 
-
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public Collection<Film> findAll() {
@@ -59,5 +58,17 @@ public class FilmController {
     @ResponseStatus(HttpStatus.OK)
     public Collection<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") int count) {
         return service.getPopularFilms(count);
+    }
+
+    @DeleteMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteFilm(@PathVariable int filmId) {
+        service.deleteFilm(filmId);
+    }
+
+    @GetMapping("/common")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<Film> getCommonFilms(@RequestParam int userId, @RequestParam int friendId) {
+        return service.getCommonFilms(userId, friendId);
     }
 }

@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+
 @RequiredArgsConstructor
 @Repository
 public class UserDbStorage implements UserStorage {
@@ -31,6 +32,9 @@ public class UserDbStorage implements UserStorage {
             """;
     private static final String UPDATE_USER_SQL = """
             UPDATE users SET email = ?, login = ?, name = ?, birthday = ? WHERE user_id = ?
+            """;
+    private static final String DELETE_USER_SQL = """
+            DELETE FROM users WHERE user_id = ?
             """;
 
 
@@ -68,6 +72,12 @@ public class UserDbStorage implements UserStorage {
     public Optional<User> findUserById(int id) {
         String sql = SELECT_USER_BY_ID_SQL;
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs), id).stream().findFirst();
+    }
+
+    @Override
+    public void deleteUser(int id) {
+        String sql = DELETE_USER_SQL;
+        jdbcTemplate.update(sql, id);
     }
 
     private User makeUser(ResultSet rs) throws SQLException {
