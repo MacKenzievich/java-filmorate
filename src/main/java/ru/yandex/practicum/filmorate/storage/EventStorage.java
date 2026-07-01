@@ -8,5 +8,5 @@ public interface EventStorage {
 
     void createEvent(Event event);
 
-    List<Event> findByUserId(int user_id);
+    List<Event> findByUserId(int userId);
 }

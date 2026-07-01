@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.storage.EventStorage;
 
 import java.util.List;
 
+
 @Component
 @RequiredArgsConstructor
 public class EventDbStorage implements EventStorage {
