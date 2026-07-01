@@ -114,5 +114,10 @@ public class FilmService {
         filmStorage.deleteFilm(id);
     }
 
+    public List<Film> getCommonFilms(int userId, int friendId) {
+        List<Film> films = filmStorage.findCommonFilms(userId, friendId);
+        genreStorage.findAllGenresByFilm(films);
+        return films;
+    }
 
 }
