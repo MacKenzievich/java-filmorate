@@ -7,11 +7,13 @@ import ru.yandex.practicum.filmorate.exception.GenreNotFoundException;
 import ru.yandex.practicum.filmorate.exception.MpaNotFoundException;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ public class FilmService {
     private final GenreStorage genreStorage;
     private final LikeStorage likeStorage;
     private final UserStorage userStorage;
+    private final DirectorStorage directorStorage;
 
 
     public Film create(Film film) {
@@ -119,5 +122,20 @@ public class FilmService {
         genreStorage.findAllGenresByFilm(films);
         return films;
     }
+    public List<Film> findSortFilmsByDirector(int id, String sortBy) {
+        if (directorStorage.findDirectorById(id).isEmpty()) {
+            throw new DirectorNotFoundException("Режиссер не найден.");
+        }
+        List<Film> films = new ArrayList<>();
+        if (sortBy.equals("year")) {
+            films = filmStorage.findDirectorsFilmsByYear(id);
+        } else if (sortBy.equals("likes")) {
+            films = filmStorage.findDirectorsFilmsByLikes(id);
+        }
+        genreStorage.findAllGenresByFilm(films);
+        directorStorage.findAllDirectorsByFilm(films);
+        return films;
+    }
+
 
 }

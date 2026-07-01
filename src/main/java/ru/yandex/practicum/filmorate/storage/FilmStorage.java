@@ -18,6 +18,10 @@ public interface FilmStorage {
 
     Optional<Film> findFilmById(int id);
 
+    List<Film> findDirectorsFilmsByYear(int id);
+
+    List<Film> findDirectorsFilmsByLikes(int id);
+
     void deleteFilm(int id);
 
     List<Film> findCommonFilms(int userId, int friendId);

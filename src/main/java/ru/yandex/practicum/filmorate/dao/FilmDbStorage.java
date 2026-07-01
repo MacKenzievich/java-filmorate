@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -102,6 +103,24 @@ public class FilmDbStorage implements FilmStorage {
     private static final String SELECT_ALL_FILMS_SQL = """
             ORDER BY f.film_id
             """;
+    private static final String DELETE_FILM_DIRECTOR_SQL = "DELETE FROM film_director WHERE film_id = ?";
+    private static final String INSERT_FILM_DIRECTOR_SQL = "INSERT INTO film_director (film_id, director_id) VALUES (?, ?)";
+    private static final String SELECT_DIRECTORS_FILM_SORTED_BY_LIKES_SQL = """
+            SELECT f.film_id, f.name, f.description, f.releaseDate, f.duration, r.rating_id, r.name AS mpa_name, COUNT(l.user_id) AS likes_count
+            FROM films f
+            LEFT JOIN film_director fd ON f.film_id = fd.film_id
+            LEFT JOIN directors d ON fd.director_id = d.director_id
+            LEFT JOIN mpa_rating r ON f.rating_id = r.rating_id
+            LEFT JOIN likes l ON f.film_id = l.film_id
+            WHERE d.director_id = ?
+            GROUP BY f.film_id, f.name, f.description, f.releaseDate, f.duration, r.rating_id, r.name
+            ORDER BY likes_count DESC
+            """;
+
+    private static final String SELECT_DIRECTORS_FILM_SORTED_BY_RELEASE_DATE_SQL = SELECT_FILMS_SQL + """
+            INNER JOIN film_director as fd ON fd.film_id = f.film_id
+            WHERE fd.director_id = ?
+            """;
     private static final String SELECT_RECOMMENDATIONS_FILMS = SELECT_FILMS_SQL + """
                     LEFT JOIN likes ON f.film_id = likes.film_id
                     LEFT JOIN users ON likes.user_id = users.user_id
@@ -136,6 +155,7 @@ public class FilmDbStorage implements FilmStorage {
                 }, keyHolder);
         film.setId(keyHolder.getKey().intValue());
         updateGenres(film.getGenres(), film.getId());
+        updateDirectors(film.getDirectors(), film.getId());
         return film;
     }
 
@@ -147,6 +167,7 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sql, film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(),
                 film.getMpa().getId(), id);
         updateGenres(film.getGenres(), id);
+        updateDirectors(film.getDirectors(), film.getId());
         return film;
     }
 
@@ -160,6 +181,18 @@ public class FilmDbStorage implements FilmStorage {
     public Optional<Film> findFilmById(int id) {
         String sql = SELECT_FILM_BY_ID_SQL;
         return jdbcTemplate.query(SELECT_FILMS_SQL + " " + sql, (rs, rowNum) -> makeFilm(rs), id).stream().findFirst();
+    }
+
+    @Override
+    public List<Film> findDirectorsFilmsByYear(int id) {
+        String sql = SELECT_DIRECTORS_FILM_SORTED_BY_RELEASE_DATE_SQL;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), id);
+    }
+
+    @Override
+    public List<Film> findDirectorsFilmsByLikes(int id) {
+        String sql = SELECT_DIRECTORS_FILM_SORTED_BY_LIKES_SQL;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), id);
     }
 
     @Override
@@ -212,6 +245,11 @@ public class FilmDbStorage implements FilmStorage {
                 (rs, rowNum) -> makeFilm(rs), userId, userId);
     }
 
+    private void createFilmWithDirector(int filmId, int directorId) {
+        String sql = "INSERT INTO film_director (film_id, director_id) VALUES (?, ?)";
+        jdbcTemplate.update(sql, filmId, directorId);
+    }
+
     private Film makeFilm(ResultSet rs) throws SQLException {
         Integer id = rs.getInt("film_id");
         Film film = Film.builder()
@@ -250,4 +288,27 @@ public class FilmDbStorage implements FilmStorage {
         String sql = SELECT_COMMON_FILMS_SQL;
         return jdbcTemplate.query(sql, (rs, rowNum) -> makeFilm(rs), userId, friendId);
     }
+
+
+    private void updateDirectors(Set<Director> directors, int filmId) {
+        jdbcTemplate.update(DELETE_FILM_DIRECTOR_SQL, filmId);
+        if (directors != null && !directors.isEmpty()) {
+            jdbcTemplate.batchUpdate(
+                    INSERT_FILM_DIRECTOR_SQL,
+                    new BatchPreparedStatementSetter() {
+                        @Override
+                        public void setValues(PreparedStatement ps, int i) throws SQLException {
+                            ps.setInt(1, filmId);
+                            ps.setInt(2, new ArrayList<>(directors).get(i).getId());
+                        }
+
+                        @Override
+                        public int getBatchSize() {
+                            return directors.size();
+                        }
+                    });
+        }
+    }
+
+
 }

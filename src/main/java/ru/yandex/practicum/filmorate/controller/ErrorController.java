@@ -7,7 +7,7 @@ import ru.yandex.practicum.filmorate.exception.*;
 @RestControllerAdvice
 public class ErrorController {
 
-    @ExceptionHandler({NotFoundException.class, FilmNotFoundException.class, GenreNotFoundException.class, MpaNotFoundException.class, UserNotFoundException.class, ReviewNotFoundException.class})
+    @ExceptionHandler({NotFoundException.class, FilmNotFoundException.class, GenreNotFoundException.class, MpaNotFoundException.class, UserNotFoundException.class, ReviewNotFoundException.class, DirectorNotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFoundException(final RuntimeException e) {
         return new ErrorResponse("Ошибка", e.getMessage());
