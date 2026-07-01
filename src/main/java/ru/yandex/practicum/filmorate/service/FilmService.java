@@ -110,5 +110,9 @@ public class FilmService {
         return genreStorage.findGenreById(id).orElseThrow(() -> new GenreNotFoundException("Жанр не найден."));
     }
 
+    public void deleteFilm(int id) {
+        filmStorage.deleteFilm(id);
+    }
+
 
 }

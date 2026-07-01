@@ -24,8 +24,14 @@ CREATE TABLE IF NOT EXISTS friendship
     user_id   INT,
     friend_id INT,
     status boolean,
-    FOREIGN KEY (user_id) REFERENCES users (user_id),
-    FOREIGN KEY (friend_id) REFERENCES users (user_id)
+
+    FOREIGN KEY (user_id)
+    REFERENCES users (user_id)
+    ON DELETE CASCADE,
+
+    FOREIGN KEY (friend_id)
+    REFERENCES users (user_id)
+    ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS mpa_rating
@@ -49,8 +55,14 @@ CREATE TABLE IF NOT EXISTS likes
     film_id INT,
     user_id INT,
     PRIMARY KEY (user_id, film_id),
-    FOREIGN KEY (film_id) REFERENCES films (film_id),
-    FOREIGN KEY (user_id) REFERENCES users (user_id)
+
+    FOREIGN KEY (film_id)
+    REFERENCES films (film_id)
+    ON DELETE CASCADE,
+
+    FOREIGN KEY (user_id)
+    REFERENCES users (user_id)
+    ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS genres
@@ -64,6 +76,12 @@ CREATE TABLE IF NOT EXISTS film_genres
     id       INT AUTO_INCREMENT,
     film_id  INT,
     genre_id INT,
-    FOREIGN KEY (film_id) REFERENCES films (film_id),
-    FOREIGN KEY (genre_id) REFERENCES genres (genre_id)
+
+    FOREIGN KEY (film_id)
+    REFERENCES films (film_id)
+    ON DELETE CASCADE,
+
+    FOREIGN KEY (genre_id)
+    REFERENCES genres (genre_id)
+    ON DELETE CASCADE
 );

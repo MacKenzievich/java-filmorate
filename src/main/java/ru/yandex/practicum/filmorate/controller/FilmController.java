@@ -64,4 +64,9 @@ public class FilmController {
         service.deleteLike(id, userId);
     }
 
+    @DeleteMapping("/{filmId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteFilm(@PathVariable int filmId) {
+        service.deleteFilm(filmId);
+    }
 }
