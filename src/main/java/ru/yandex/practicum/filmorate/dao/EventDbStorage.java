@@ -39,7 +39,7 @@ public class EventDbStorage implements EventStorage {
     }
 
     @Override
-    public List<Event> findByUserId(int user_id) {
+    public List<Event> findByUserId(int userId) {
 
         return jdbcTemplate.query(GET_USER_FEED, (rs, rowNum) -> {
 
@@ -60,6 +60,6 @@ public class EventDbStorage implements EventStorage {
 
             return event;
 
-        }, user_id);
+        }, userId);
     }
 }
